@@ -69,7 +69,7 @@ if args.data == 'imdb':
 	with open('imdb.libsvm', 'ab') as f:
 		for i in range(y.shape[0]):
 			np_sentence = np.matrix(np.stack([embedding_weights[word] for word in X[i,:]]).flatten())
-			dump_svmlight_file(np_sentence, [y[i]], f, zero_based=False)
+			dump_svmlight_file(np_sentence, [y[i]+1], f, zero_based=False)
 elif args.data == 'mnist':
 	import mnist
 	# Use MNIST 60K dataset.
@@ -79,7 +79,7 @@ elif args.data == 'mnist':
 	# Scale the input features
 	scale = 0.00390625
 	X_train = X_train*scale
-	dump_svmlight_file(X, y, 'mnist.libsvm', zero_based=False)
+	dump_svmlight_file(X, y+1, 'mnist.libsvm', zero_based=False)
 else:
 	raise ValueError('Unsupported data:' + args.data)
 print("Done.")

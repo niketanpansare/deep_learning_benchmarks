@@ -59,12 +59,15 @@
 # embedding_model.save('imdb_embedding.model') 
 
 SPARK_PARAMS=""
-BIGDL_PARAMS="--driver-class-path bigdl-SPARK_2.1-0.4.0-jar-with-dependencies.jar  --conf spark.shuffle.reduceLocality.enabled=false --conf spark.shuffle.blockTransferService=nio --conf spark.scheduler.minRegisteredResourcesRatio=0.0 --conf spark.scheduler.minRegisteredResourcesRatio=1.0 --conf spark.speculation=false"
+BIGDL_JAR="bigdl-SPARK_2.1-0.4.0-jar-with-dependencies.jar"
+BIGDL_PARAMS="--driver-class-path "$BIGDL_JAR"  --conf spark.shuffle.reduceLocality.enabled=false --conf spark.shuffle.blockTransferService=nio --conf spark.scheduler.minRegisteredResourcesRatio=0.0 --conf spark.scheduler.minRegisteredResourcesRatio=1.0 --conf spark.speculation=false"
 
 setup_env_framework() {
 	if [ "$1" == 'bigdl' ]; then
 		# BigDL doesnot support latest Keras version
 		pip install keras==1.2.2
+		rm $BIGDL_JAR &> /dev/null
+		wget "http://central.maven.org/maven2/com/intel/analytics/bigdl/bigdl-SPARK_2.1/0.4.0/"$BIGDL_JAR
 	else
 		pip install keras==2.1.3
 	fi
@@ -128,14 +131,14 @@ get_model_specific_settings() {
         fi
 	if [ "$model" == 'lenet' ]; then
                 declare -ga DATA=("mnist")
-                declare -ga DATA_FORMAT=("numpy")
+		declare -ga DATA_FORMAT=("numpy") # since the dataset is tiny, no need to test with spark_df
         elif [ "$model" == 'sentence_cnn_static' ]; then
 		# Sparse and large dataset
                 declare -ga DATA=("imdb")
 		if [ "$framework" == 'tensorflow' ]; then
-                	declare -ga DATA_FORMAT=("scipy") # use generator
+                	declare -ga DATA_FORMAT=("scipy") # use generator as tensorflow doesnot support spark_df
 		else
-			declare -ga DATA_FORMAT=("spark_df" "scipy")
+			declare -ga DATA_FORMAT=("spark_df")
 		fi
         else
                 echo "The model "$model" is not supported."
@@ -146,7 +149,7 @@ get_model_specific_settings() {
 #if [[ -z "${SPARK_HOME}" ]]; then
 #	echo "Please set the environment variable SPARK_HOME"
 #else
-	echo 'framework,model,data,epochs,batch_size,num_gpus,precision,blas,phase,codegen,total_time,data_loading_time,model_loading_time,fit_time,spark_init_time,predict_time' > time.txt
+	echo 'framework,model,data,data_format,epochs,batch_size,num_gpus,precision,blas,phase,codegen,total_time,data_loading_time,model_loading_time,fit_time,spark_init_time,predict_time' > time.txt
 	if [ ! -d logs ]; then
 		mkdir logs
 	fi
