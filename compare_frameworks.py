@@ -77,26 +77,23 @@ spark_init_time = time.time() - t0
 
 import math
 import numpy as np
-try:
-	import keras
-	from keras.models import Sequential, Model
-	from keras.layers import Input, Dense, MaxPooling2D, Dropout, Flatten, Reshape, Concatenate
-	from keras import backend as K
-	from keras.models import Model
-	from keras.utils import np_utils
-	from keras.backend.tensorflow_backend import set_session
-	from keras import regularizers
-	from keras.preprocessing import sequence
-	right_keras_version = '1.2.2' if args.framework == 'bigdl' else '2.1.3'
-	if keras.__version__ != right_keras_version:
-		print('WARNING: Incorrect keras version:' + str(keras.__version__) + '. Expected keras version:' + right_keras_version)
-	if args.framework == 'bigdl':
-		# bigdl only supports keras 1.2
-		from keras.layers import Convolution2D
-	else:
-		from keras.layers import Conv2D
-except ImportError:
-        raise ImportError('Make sure you have installed right version of keras. Hint: pip install keras==1.2.2 for BigDL and pip install keras==2.1.3 for other frameworks')
+import keras
+right_keras_version = '1.2.2' if args.framework == 'bigdl' else '2.1.3'
+if keras.__version__ != right_keras_version:
+	print('WARNING: Incorrect keras version:' + str(keras.__version__) + '. Expected keras version:' + right_keras_version)
+from keras.models import Sequential, Model
+from keras.layers import Input, Dense, MaxPooling2D, Dropout, Flatten, Reshape
+from keras import backend as K
+from keras.models import Model
+from keras.utils import np_utils
+from keras.backend.tensorflow_backend import set_session
+from keras import regularizers
+from keras.preprocessing import sequence
+if args.framework == 'bigdl':
+	# bigdl only supports keras 1.2
+	from keras.layers import Convolution2D, Merge
+else:
+	from keras.layers import Conv2D, Concatenate
 
 try:
 	import tensorflow as tf
@@ -144,6 +141,14 @@ def dense(num_out, activation='relu'):
 	else:
 		return Dense(num_out, activation=activation, kernel_regularizer=regularizers.l2(0.01))
 
+def concat(conv_ngrams):
+	if len(conv_ngrams) == 1:
+		return conv_ngrams[0]
+	if args.framework == 'bigdl':
+		return Merge(conv_ngrams, mode='concat', concat_axis=1)
+	else:
+		return Concatenate()(conv_ngrams)
+
 def reshape_for_bigdl():
 	input_shape = get_keras_input_shape(input_shapes[args.data]) # if args.framework == 'tensorflow' else input_shapes[args.data]
 	# As per https://github.com/intel-analytics/BigDL/blob/master/pyspark/bigdl/models/lenet/lenet5.py
@@ -175,7 +180,7 @@ def get_keras_model():
 			conv = MaxPooling2D(pool_size=(pool_h[i], 1))(conv)
 			conv = Flatten()(conv)
 			conv_ngrams.append(conv)
-		z = Concatenate()(conv_ngrams) if len(conv_ngrams) > 1 else conv_ngrams[0]
+		z = concat(conv_ngrams)
 		z = dense(500, activation='relu')(z)
 		z = Dropout(0.5)(z)
 		model_output = dense(2, activation='sigmoid')(z)
