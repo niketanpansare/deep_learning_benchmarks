@@ -87,7 +87,7 @@ get_spark_params() {
 }
 
 get_framework_specific_settings() {
-	declare -ga MODELS=("lenet" "sentence_cnn_static")
+	declare -ga MODELS=("sentence_cnn_static" "lenet")
 	if [ "$1" == 'tensorflow' ]; then
 		declare -ga CODEGEN=("enabled" "disabled")
 		declare -ga PRECISION=("single") # double precision fails on TF
@@ -118,10 +118,6 @@ get_model_specific_settings() {
 	if [ "$framework" == 'tensorflow' ]; then
 		declare -ga BATCH_SIZES=(60)
 	elif [ "$framework" == 'systemml' ]; then
-		if [ "$num_gpus" == "1" ]; then
-			# codegen is not supported on gpu
-			declare -ga CODEGEN=("disabled")
-		fi
 		declare -ga BATCH_SIZES=(60)
 	elif [ "$framework" == 'bigdl' ]; then
                 declare -ga BATCH_SIZES=(60) # BigDL only works if batch size is multiple of number of cores

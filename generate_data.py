@@ -79,7 +79,7 @@ elif args.data == 'mnist':
 	# Scale the input features
 	scale = 0.00390625
 	X_train = X_train*scale
-	dump_svmlight_file(X, y+1, 'mnist.libsvm', zero_based=False)
+	dump_svmlight_file(X_train, y_train+1, 'mnist.libsvm', zero_based=False)
 else:
 	raise ValueError('Unsupported data:' + args.data)
 print("Done.")

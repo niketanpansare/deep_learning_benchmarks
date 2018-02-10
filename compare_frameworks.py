@@ -89,7 +89,7 @@ try:
 	from keras.preprocessing import sequence
 	right_keras_version = '1.2.2' if args.framework == 'bigdl' else '2.1.3'
 	if keras.__version__ != right_keras_version:
-		raise ImportError('Incorrect keras version:' + str(keras.__version__))
+		print('WARNING: Incorrect keras version:' + str(keras.__version__) + '. Expected keras version:' + right_keras_version)
 	if args.framework == 'bigdl':
 		# bigdl only supports keras 1.2
 		from keras.layers import Convolution2D
@@ -196,7 +196,6 @@ if args.data_format == 'numpy' or args.data_format == 'scipy':
 	in_shape = input_shapes[args.data]
 	X, y = load_svmlight_file(args.data + '.libsvm', n_features=in_shape[0]*in_shape[1]*in_shape[2], zero_based=False)
 	y = y if args.framework == 'bigdl' else y-1 # convert one-based labels to zero-based
-	X = X*0.00390625 if args.data == 'mnist' else X # scale the input features
 	if args.data_format == 'numpy':
 		X = X.toarray()
 		if args.precision == 'double':
