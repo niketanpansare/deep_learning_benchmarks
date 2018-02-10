@@ -22,9 +22,8 @@
 
 # To check usage, run with -h option: `python generate_data.py -h`
 
-import os, argparse, sys
+import os, argparse, sys, random
 import numpy as np
-import os
 from keras.preprocessing import sequence
 from keras.datasets import imdb
 from gensim.models import word2vec
@@ -66,8 +65,12 @@ if args.data == 'imdb':
 	embedding_weights = {key: get_embedding(word) for key, word in vocabulary_inv.items()}
 	if os.path.exists('imdb.libsvm'):
 		os.remove('imdb.libsvm')
+	idx = range(y.shape[0])
+	num_samples = 10000
+	random.shuffle(idx)
+	idx = idx[0:num_samples]	
 	with open('imdb.libsvm', 'ab') as f:
-		for i in range(y.shape[0]):
+		for i in idx:
 			np_sentence = np.matrix(np.stack([embedding_weights[word] for word in X[i,:]]).flatten())
 			dump_svmlight_file(np_sentence, [y[i]+1], f, zero_based=False)
 elif args.data == 'mnist':
@@ -82,4 +85,4 @@ elif args.data == 'mnist':
 	dump_svmlight_file(X_train, y_train+1, 'mnist.libsvm', zero_based=False)
 else:
 	raise ValueError('Unsupported data:' + args.data)
-print("Done.")
+print("Done generating data.")
