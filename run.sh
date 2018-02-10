@@ -58,6 +58,7 @@
 # embedding_model.init_sims(replace=True)
 # embedding_model.save('imdb_embedding.model') 
 
+DEFAULT_SPARK_PARAMS="--driver-memory 50g --conf spark.driver.maxResultSize=0"
 SPARK_PARAMS=""
 BIGDL_JAR="bigdl-SPARK_2.1-0.4.0-jar-with-dependencies.jar"
 BIGDL_PARAMS="--driver-class-path "$BIGDL_JAR"  --conf spark.shuffle.reduceLocality.enabled=false --conf spark.shuffle.blockTransferService=nio --conf spark.scheduler.minRegisteredResourcesRatio=0.0 --conf spark.scheduler.minRegisteredResourcesRatio=1.0 --conf spark.speculation=false"
@@ -75,11 +76,11 @@ setup_env_framework() {
 
 get_spark_params() {
 	if [ "$1" == 'tensorflow' ]; then
-		SPARK_PARAMS="--driver-memory 50g"
+		SPARK_PARAMS=$DEFAULT_SPARK_PARAMS
 	elif [ "$1" == 'systemml' ]; then
-		SPARK_PARAMS="--driver-memory 50g"
+		SPARK_PARAMS=$DEFAULT_SPARK_PARAMS
 	elif [ "$1" == 'bigdl' ]; then
-		SPARK_PARAMS="--driver-memory 50g "$BIGDL_PARAMS
+		SPARK_PARAMS=$DEFAULT_SPARK_PARAMS" "$BIGDL_PARAMS
 	else
 		echo "Unsupported framework:"$framework
                 exit
