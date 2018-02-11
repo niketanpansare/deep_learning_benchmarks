@@ -149,10 +149,13 @@ def concat(conv_ngrams):
 	else:
 		return Concatenate()(conv_ngrams)
 
-def reshape_for_bigdl():
-	input_shape = get_keras_input_shape(input_shapes[args.data]) # if args.framework == 'tensorflow' else input_shapes[args.data]
-	# As per https://github.com/intel-analytics/BigDL/blob/master/pyspark/bigdl/models/lenet/lenet5.py
-	return Reshape(input_shape, input_shape=(1, input_shape[0]*input_shape[1]*input_shape[2]))
+def reshape_for_bigdl(inputL=None):
+        input_shape = get_keras_input_shape(input_shapes[args.data]) # if args.framework == 'tensorflow' else input_shapes[args.data]
+        # As per https://github.com/intel-analytics/BigDL/blob/master/pyspark/bigdl/models/lenet/lenet5.py
+        if inputL == None:
+                return Reshape(input_shape, input_shape=(1, input_shape[0]*input_shape[1]*input_shape[2]))
+        else:
+                return Reshape(input_shape)(inputL)
 
 def get_keras_model():
 	if args.model == 'lenet':
@@ -172,7 +175,8 @@ def get_keras_model():
 		# Functional model
 		conv_ngrams = []
 		nb_filters = 100
-		inputL = reshape_for_bigdl() if args.framework == 'bigdl' else Input(shape=get_keras_input_shape(input_shapes[args.data]))
+		inputL = Input(shape=get_keras_input_shape(input_shapes[args.data]))
+                inputL = reshape_for_bigdl(inputL) if args.framework == 'bigdl' else inputL
 		kernel_h = [2, 3, 4, 5]
 		pool_h = [ sentence_length - k for k in kernel_h ]
 		for i in range(len(kernel_h)):
