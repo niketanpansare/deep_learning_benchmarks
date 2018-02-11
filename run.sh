@@ -134,6 +134,8 @@ get_model_specific_settings() {
                 declare -ga DATA=("imdb")
 		if [ "$framework" == 'tensorflow' ]; then
                 	declare -ga DATA_FORMAT=("scipy") # use generator as tensorflow doesnot support spark_df
+		elif [ "$framework" == 'bigdl' ]; then
+                        declare -ga DATA_FORMAT=("scipy") # bigdl+spark_df is crashing
 		else
 			declare -ga DATA_FORMAT=("spark_df")
 		fi
