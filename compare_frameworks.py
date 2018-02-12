@@ -218,12 +218,6 @@ else:
 	raise ValueError('Unsupported data format:' + rgs.data_format)
 data_loading = data_loading + time.time() - t0
 
-epochs = int(args.epochs)
-batch_size = int(args.batch_size)
-num_samples = X.shape[0] if hasattr(X, 'shape') else X.count()
-max_iter = int(epochs*math.ceil(num_samples/batch_size))
-display = int(config['display'])
-
 def get_framework_model(framework):
 	keras_model = get_keras_model()
 	loss = 'categorical_crossentropy' if args.data =='mnist' else 'mean_squared_error'
@@ -313,7 +307,6 @@ def get_framework_data(framework, X, y):
 	else:
 		raise ValueError('Unsupported framework:' + str(framework))
 
-
 framework = args.framework
 t0 = time.time()
 print("Getting model for the framework:" + framework)
@@ -321,15 +314,22 @@ framework_model = get_framework_model(framework)
 t1 = time.time()
 print("Getting data for the framework:" + framework)
 framework_X, framework_y = get_framework_data(framework, X, y)
+num_samples = X.shape[0] if hasattr(X, 'shape') else -1
 if args.data_format == 'spark_df':
-	# For fair comparison with BigDL
-	from pyspark import StorageLevel
-	framework_X.persist(StorageLevel.MEMORY_AND_DISK)
-	framework_X.count()
-	#framework_X.show()
+        # For fair comparison with BigDL
+        from pyspark import StorageLevel
+        framework_X.persist(StorageLevel.MEMORY_AND_DISK)
+        num_samples = framework_X.count()
+if num_samples  == -1:
+        raise ValueError("Incorrect number of samples")
 t2 = time.time()
 data_loading = data_loading + t2 - t1
-model_loading = t1 - t0 
+model_loading = t1 - t0
+
+epochs = int(args.epochs)
+batch_size = int(args.batch_size)
+max_iter = int(epochs*math.ceil(num_samples/batch_size))
+display = int(config['display'])
 
 if args.phase == 'train':
         print("Starting fit for the framework:" + framework)
