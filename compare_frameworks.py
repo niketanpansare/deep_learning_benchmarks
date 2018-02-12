@@ -309,9 +309,9 @@ def get_framework_data(framework, X, y):
 
 framework = args.framework
 t0 = time.time()
-print("Getting model for the framework:" + framework)
-framework_model = get_framework_model(framework)
-t1 = time.time()
+epochs = int(args.epochs)
+batch_size = int(args.batch_size)
+display = int(config['display'])
 print("Getting data for the framework:" + framework)
 framework_X, framework_y = get_framework_data(framework, X, y)
 num_samples = X.shape[0] if hasattr(X, 'shape') else -1
@@ -322,14 +322,14 @@ if args.data_format == 'spark_df':
         num_samples = framework_X.count()
 if num_samples  == -1:
         raise ValueError("Incorrect number of samples")
+else:
+	max_iter = int(epochs*math.ceil(num_samples/batch_size))
+t1 = time.time()
+print("Getting model for the framework:" + framework)
+framework_model = get_framework_model(framework)
 t2 = time.time()
-data_loading = data_loading + t2 - t1
-model_loading = t1 - t0
-
-epochs = int(args.epochs)
-batch_size = int(args.batch_size)
-max_iter = int(epochs*math.ceil(num_samples/batch_size))
-display = int(config['display'])
+data_loading = data_loading + t1 - t0
+model_loading = t2 - t1
 
 if args.phase == 'train':
         print("Starting fit for the framework:" + framework)
