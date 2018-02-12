@@ -67,7 +67,7 @@ fi
 read -r -p "Do you want to install libraries necessary for generating the datasets? [y/N] " response
 if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]
 then
-	pip install mnist, gensim
+	pip install mnist gensim
 fi
 
 
