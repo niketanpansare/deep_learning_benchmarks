@@ -20,44 +20,6 @@
 #
 #-------------------------------------------------------------
 
-# Install Keras:
-# pip install keras==2.1.3
-
-# Build tensorflow from the source with CUDA 8 and CuDNN 5 for fair comparison.
-# git clone https://github.com/tensorflow/tensorflow
-# cd tensorflow
-# git checkout r1.5
-# Use CUDA 8, CuDNN 5 and enable XLA.
-# ./configure
-# bazel build --config=opt --config=cuda //tensorflow/tools/pip_package:build_pip_package
-# bazel-bin/tensorflow/tools/pip_package/build_pip_package ~/nike/sysml_experiments/
-# pip install --upgrade ~/nike/sysml_experiments/tensorflow-1.5.0-cp27-cp27mu-linux_x86_64.whl
-
-# BigDL:
-# wget https://s3-ap-southeast-1.amazonaws.com/bigdl-download/dist-spark-2.1.1-scala-2.11.8-all-0.4.0-dist.zip
-# pip install bigdl==0.4.0
-
-# Datasets:
-# pip install mnist, gensim
-
-# Instead of using Google’s pre-trained model (1.5 GB) from https://drive.google.com/file/d/0B7XkCwpI5KDYNlNUTTlSS21pQmM/edit?usp=sharing, we use pretrained imdb embedding.
-# The imdb embedding is availabled at and is generated using the python script:
-# from keras.datasets import imdb
-# from keras.preprocessing import sequence
-# from gensim.models import word2vec
-# import numpy as np
-# (x_train, y_train), (x_test, y_test) = imdb.load_data(num_words=10000) # load top-1000 words
-# X = np.hstack((x_train, x_test))
-# y = np.hstack((y_train, y_test))
-# sentence_length, embedding_dim = 2494, 300 # Maximum sentence length in imdb is 2494
-# X = sequence.pad_sequences(X, maxlen=sentence_length, padding="post", truncating="post")
-# vocabulary = imdb.get_word_index()
-# vocabulary_inv = dict((v, k) for k, v in vocabulary.items())
-# vocabulary_inv[0] = '<PAD/>'
-# embedding_model = word2vec.Word2Vec([[vocabulary_inv[w] for w in s] for s in X], size=embedding_dim, min_count=1, window=10, sample=1e-3, workers=2)
-# embedding_model.init_sims(replace=True)
-# embedding_model.save('imdb_embedding.model') 
-
 DEFAULT_SPARK_PARAMS="--driver-memory 50g --conf spark.driver.maxResultSize=0"
 SPARK_PARAMS=""
 BIGDL_JAR="bigdl-SPARK_2.1-0.4.0-jar-with-dependencies.jar"
@@ -67,8 +29,8 @@ setup_env_framework() {
 	if [ "$1" == 'bigdl' ]; then
 		# BigDL doesnot support latest Keras version
 		pip install keras==1.2.2
-		rm $BIGDL_JAR &> /dev/null
-		wget "http://central.maven.org/maven2/com/intel/analytics/bigdl/bigdl-SPARK_2.1/0.4.0/"$BIGDL_JAR
+		#rm $BIGDL_JAR &> /dev/null
+		#wget "http://central.maven.org/maven2/com/intel/analytics/bigdl/bigdl-SPARK_2.1/0.4.0/"$BIGDL_JAR
 	else
 		pip install keras==2.1.3
 	fi
