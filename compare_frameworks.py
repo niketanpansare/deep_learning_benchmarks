@@ -176,11 +176,11 @@ def get_keras_model():
 		conv_ngrams = []
 		nb_filters = 100
 		inputL = Input(shape=get_keras_input_shape(input_shapes[args.data]))
-                inputL = reshape_for_bigdl(inputL) if args.framework == 'bigdl' else inputL
+                inputL1 = reshape_for_bigdl(inputL) if args.framework == 'bigdl' else inputL
 		kernel_h = [2, 3, 4, 5]
 		pool_h = [ sentence_length - k for k in kernel_h ]
 		for i in range(len(kernel_h)):
-			conv = conv2d(nb_filters, kernel_h[i], embedding_dim, activation='relu', padding='valid')(inputL)
+			conv = conv2d(nb_filters, kernel_h[i], embedding_dim, activation='relu', padding='valid')(inputL1)
 			conv = MaxPooling2D(pool_size=(pool_h[i], 1))(conv)
 			conv = Flatten()(conv)
 			conv_ngrams.append(conv)
