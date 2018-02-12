@@ -91,7 +91,7 @@ from keras import regularizers
 from keras.preprocessing import sequence
 if args.framework == 'bigdl':
 	# bigdl only supports keras 1.2
-	from keras.layers import Convolution2D, Merge
+	from keras.layers import Convolution2D, merge
 else:
 	from keras.layers import Conv2D, Concatenate
 
@@ -145,7 +145,7 @@ def concat(conv_ngrams):
 	if len(conv_ngrams) == 1:
 		return conv_ngrams[0]
 	if args.framework == 'bigdl':
-		return Merge(conv_ngrams, mode='concat', concat_axis=1)
+		return merge(conv_ngrams, mode='concat', concat_axis=1)
 	else:
 		return Concatenate()(conv_ngrams)
 
