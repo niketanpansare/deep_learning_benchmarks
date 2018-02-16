@@ -76,7 +76,7 @@ get_model_specific_settings() {
 	framework=$1
 	model=$2
 	num_gpus=$3
-	declare -ga EPOCHS=(1 5)
+	declare -ga EPOCHS=(10)
 	declare -ga PHASES=("train") # test
 	if [ "$framework" == 'tensorflow' ]; then
 		declare -ga BATCH_SIZES=(60)
