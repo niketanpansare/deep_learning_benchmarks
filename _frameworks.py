@@ -33,7 +33,7 @@ from keras import regularizers
 from keras.preprocessing import sequence
 import tensorflow as tf
 from bigdl.util.common import Sample, init_engine
-from bigdl.optim.optimizer import Adam, MaxEpoch
+from bigdl.optim.optimizer import Adam, MaxEpoch,Optimizer
 from bigdl.nn.criterion import ClassNLLCriterion
 
 def disable_gpu():
@@ -206,7 +206,7 @@ def bigdl_fit(args, framework_model, X, y):
 	# SGD(learningrate=0.01, momentum=0.95, learningrate_decay=5e-4, nesterov=True, dampening=0) fails and
 	# Make batch_size divisible by number of cores
 	optim = Adam()
-	optimizer = Optimizer(model=framework_model, training_rdd=framework_X, end_trigger=MaxEpoch(epochs), optim_method=optim, batch_size=batch_size, criterion=ClassNLLCriterion(logProbAsInput=False), bigdl_type=bigdl_type)
+	optimizer = Optimizer(model=framework_model, training_rdd=X, end_trigger=MaxEpoch(args.epochs), optim_method=optim, batch_size=args.batch_size, criterion=ClassNLLCriterion(logProbAsInput=False), bigdl_type=bigdl_type)
 	optimizer.optimize()
 
 FRAMEWORK_FIT = {'systemml': systemml_fit, 'tensorflow': tensorflow_fit, 'elephas': elephas_fit, 'bigdl': bigdl_fit }
