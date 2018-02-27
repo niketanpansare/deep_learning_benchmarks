@@ -36,7 +36,7 @@ You can either use `run.sh` script provided in the repository or invoke `compare
 usage: Deep Learning (DL) Benchmarks. [-h]
                                       [--model {lenet,sentence_cnn_static}]
                                       [--data {mnist,imdb}]
-                                      [--data_format {spark_df,numpy,scipy}]
+                                      [--data_format {spark_df,numpy,scipy,binary_blocks}]
                                       [--epochs EPOCHS]
                                       [--batch_size BATCH_SIZE]
                                       [--num_gpus NUM_GPUS]
@@ -52,7 +52,7 @@ optional arguments:
                         The model to use for comparison. Default: lenet
   --data {mnist,imdb}   The dataset to use for training/testing. Default:
                         mnist
-  --data_format {spark_df,numpy,scipy}
+  --data_format {spark_df,numpy,scipy,binary_blocks}
                         The input format to use for reading the dataset.
                         Default: numpy
   --epochs EPOCHS       Number of epochs. Default: 10

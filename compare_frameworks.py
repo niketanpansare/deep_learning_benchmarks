@@ -32,7 +32,7 @@ data_loading = 0.0
 parser=argparse.ArgumentParser("Deep Learning (DL) Benchmarks.")
 parser.add_argument('--model', help='The model to use for comparison. Default: lenet', type=str, default='lenet', choices=['lenet', 'sentence_cnn_static'])
 parser.add_argument('--data', help='The dataset to use for training/testing. Default: mnist', type=str, default='mnist', choices=['mnist', 'imdb'])
-parser.add_argument('--data_format', help='The input format to use for reading the dataset. Default: numpy', type=str, default='numpy', choices=['spark_df', 'numpy', 'scipy'])
+parser.add_argument('--data_format', help='The input format to use for reading the dataset. Default: numpy', type=str, default='numpy', choices=['spark_df', 'numpy', 'scipy', 'binary_blocks'])
 parser.add_argument('--epochs', help='Number of epochs. Default: 10', type=int, default=10)
 parser.add_argument('--batch_size', help='Batch size. Default: 64', type=int, default=64)
 parser.add_argument('--num_gpus', help='Number of GPUs. Default: 0', type=int, default=0)
@@ -68,21 +68,31 @@ def load_scipy(args, input_file_path):
 		raise ValueError('Please generate the input file ' + input_file_path + ' before invoking compare_frameworks.')
 	X, y = load_svmlight_file(input_file_path, n_features=num_features, zero_based=False)
 	y = y if args.framework == 'bigdl' else y-1 # convert one-based labels to zero-based
+	args.num_samples = X.shape[0]
 	return X, y
 def load_numpy(args, input_file_path):
 	X, y = load_scipy(args, input_file_path)
 	X = X.toarray().astype(np.float64) if args.precision == 'double' else X.toarray()
+	args.num_samples = X.shape[0]
 	return X, y
 def load_spark_df(args, input_file_path):
 	from pyspark.mllib.util import MLUtils
-	X = MLUtils.convertVectorColumnsToML(MLUtils.loadLibSVMFile(sc, input_file_path, multiclass=False if args.data == 'imdb' else True, numFeatures=num_features).toDF())
+	X = MLUtils.convertVectorColumnsToML(MLUtils.loadLibSVMFile(args.sc, input_file_path, multiclass=False if args.data == 'imdb' else True, numFeatures=num_features).toDF())
 	return X, None
-DATA_LOADERS = {'scipy': load_scipy, 'numpy': load_numpy, 'spark_df': load_spark_df}
+def load_binary_blocks(args, input_file_path):
+	df, ignore = load_spark_df(args, input_file_path)
+	X_df = df.select("features")
+	y_df = df.select("label")
+	from systemml import MLContext, dml
+	ml = MLContext(args.spark)
+	res = ml.execute(dml('write(X, "X.mtx", format="binary"); write(y, "y.mtx", format="binary"); num_samples = nrow(X)').input(X=X_df, y=y_df).output("num_samples"))
+	args.num_samples = res.get("num_samples")
+	return "X.mtx", "y.mtx"
+DATA_LOADERS = {'scipy': load_scipy, 'numpy': load_numpy, 'spark_df': load_spark_df, 'binary_blocks': load_binary_blocks}
 
 with measure('data_loading'):
 	X, y = DATA_LOADERS[args.data_format](args, args.data + '.libsvm')
 	framework_X, framework_y = _frameworks.FRAMEWORK_DATA[args.framework](args, X, y)
-	args.num_samples = X.shape[0] if hasattr(X, 'shape') else -1
 	if args.data_format == 'spark_df':
         	# For fair comparison with BigDL
 	        from pyspark import StorageLevel

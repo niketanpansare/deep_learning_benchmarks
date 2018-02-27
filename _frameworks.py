@@ -171,7 +171,7 @@ def get_bigdl_data(args, X, y):
 FRAMEWORK_DATA = {'tensorflow':get_tensorflow_data, 'systemml':get_systemml_data, 'elephas':get_elephas_data, 'bigdl':get_bigdl_data}
 
 def systemml_fit(args, framework_model, X, y):
-	if args.data_format == 'scipy' or args.data_format == 'numpy':
+	if args.data_format == 'scipy' or args.data_format == 'numpy' or args.data_format == 'binary_blocks':
 		framework_model.fit(X, y)
 	elif args.data_format == 'spark_df':
 		framework_model.fit(X)

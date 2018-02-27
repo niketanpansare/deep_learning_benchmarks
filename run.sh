@@ -143,6 +143,7 @@ get_model_specific_settings() {
 											for data_format in "${DATA_FORMAT[@]}"
 											do
 												~/spark-2.1.0-bin-hadoop2.7/bin/spark-submit $SPARK_PARAMS compare_frameworks.py --model=$model --data=$data --data_format=$data_format --epochs=$epochs --batch_size=$batch_size --num_gpus=$num_gpus --framework=$framework --precision=$precision --blas=$blas --phase=$phase --codegen=$codegen &> logs/'log_'$model'_'$data'_'$epochs'_'$batch_size'_'$num_gpus'_'$framework'_'$precision'_'$blas'_'$phase'_'$data_format'_codegen-'$codegen'.txt'
+												rm -rf metastore_db scratch_space spark-warehouse
 											done
 										done
 									done
