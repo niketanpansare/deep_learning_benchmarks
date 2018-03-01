@@ -20,7 +20,7 @@
 #
 #-------------------------------------------------------------
 
-DEFAULT_SPARK_PARAMS="--driver-memory 50g --conf spark.driver.maxResultSize=0"
+DEFAULT_SPARK_PARAMS="--driver-memory 80g --conf spark.driver.maxResultSize=0"
 SPARK_PARAMS=""
 BIGDL_JAR="bigdl-SPARK_2.1-0.4.0-jar-with-dependencies.jar"
 BIGDL_PARAMS="--driver-class-path "$BIGDL_JAR"  --conf spark.shuffle.reduceLocality.enabled=false --conf spark.shuffle.blockTransferService=nio --conf spark.scheduler.minRegisteredResourcesRatio=0.0 --conf spark.scheduler.minRegisteredResourcesRatio=1.0 --conf spark.speculation=false"
@@ -52,14 +52,14 @@ get_spark_params() {
 get_framework_specific_settings() {
 	declare -ga MODELS=("sentence_cnn_static" "lenet")
 	if [ "$1" == 'tensorflow' ]; then
-		declare -ga CODEGEN=("enabled" "disabled")
+		declare -ga CODEGEN=("disabled")
 		declare -ga PRECISION=("single") # double precision fails on TF
-		declare -ga NUM_GPUS=(0 1)
+		declare -ga NUM_GPUS=(1)
 		declare -ga SUPPORTED_BLAS=("eigen")
 	elif [ "$1" == 'systemml' ]; then
-		declare -ga CODEGEN=("enabled" "disabled")
+		declare -ga CODEGEN=("disabled")
 		declare -ga PRECISION=("single" "double")
-		declare -ga NUM_GPUS=(0 1)
+		declare -ga NUM_GPUS=(1)
 		declare -ga SUPPORTED_BLAS=("openblas") # ("none" "mkl" "openblas")
 	elif [ "$1" == 'bigdl' ]; then
 		declare -ga CODEGEN=("disabled")
@@ -88,7 +88,10 @@ get_model_specific_settings() {
 		echo "Unsupported framework:"$framework
                 exit
         fi
-	if [ "$model" == 'lenet' ]; then
+	
+	if [ "$framework" == 'systemml' ]; then
+		declare -ga DATA_FORMAT=("binary_blocks")
+	elif [ "$model" == 'lenet' ]; then
                 declare -ga DATA=("mnist")
 		declare -ga DATA_FORMAT=("numpy") # since the dataset is tiny, no need to test with spark_df
         elif [ "$model" == 'sentence_cnn_static' ]; then
@@ -115,7 +118,7 @@ get_model_specific_settings() {
 		mkdir logs
 	fi
 	
-	for framework in tensorflow systemml bigdl
+	for framework in tensorflow systemml # bigdl
 	do
 		pip uninstall keras --yes
 		setup_env_framework "$framework"
