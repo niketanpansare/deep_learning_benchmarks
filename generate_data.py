@@ -32,6 +32,7 @@ from sklearn.utils import shuffle
 
 parser=argparse.ArgumentParser()
 parser.add_argument('--data', help='Supported values are: mnist, imdb. Default: mnist', type=str, default='mnist')
+parser.add_argument('--num_samples', help='Number of samples to use. Default:-1 (implies use all the samples in the dataset', type=int, default=-1)
 args=parser.parse_args()
 
 if args.data == 'imdb':
@@ -53,22 +54,21 @@ if args.data == 'imdb':
 		# Save the model in case the process crashes for reuse.
 		embedding_model.save('imdb_embedding.model')
 	def get_embedding(word):
-		if word == '<PAD/>':
+		if word in embedding_model:
+                        # one of the top-10K word.
+                        return embedding_model[word]
+		else:
+			# Set unknown word and PAD to 0
 			# Since pad is an artificial token, it can be replaced by 0's.
 			# This will allow us to (1) test frameworks for sparsity support, and (2) reduce the size of generated libsvm file.
 			return np.zeros(embedding_model.vector_size)
-		elif word in embedding_model:
-			# one of the top-10K word.
-			return embedding_model[word]
-		else:
-			return np.random.uniform(-0.25, 0.25, embedding_model.vector_size) # add unknown words
 	embedding_weights = {key: get_embedding(word) for key, word in vocabulary_inv.items()}
 	if os.path.exists('imdb.libsvm'):
 		os.remove('imdb.libsvm')
 	idx = range(y.shape[0])
-	num_samples = 10000
 	random.shuffle(idx)
-	idx = idx[0:num_samples]	
+	num_samples = args.num_samples if args.num_samples != -1 else len(y)
+	idx = idx[0:num_samples]
 	with open('imdb.libsvm', 'ab') as f:
 		for i in idx:
 			np_sentence = np.matrix(np.stack([embedding_weights[word] for word in X[i,:]]).flatten())
@@ -82,7 +82,8 @@ elif args.data == 'mnist':
 	# Scale the input features
 	scale = 0.00390625
 	X_train = X_train*scale
-	dump_svmlight_file(X_train, y_train+1, 'mnist.libsvm', zero_based=False)
+	num_samples = args.num_samples if args.num_samples != -1 else len(y)
+	dump_svmlight_file(X_train[0:num_samples,:], y_train[0:num_samples]+1, 'mnist.libsvm', zero_based=False)
 else:
 	raise ValueError('Unsupported data:' + args.data)
 print("Done generating data.")

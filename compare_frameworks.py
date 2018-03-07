@@ -66,7 +66,22 @@ _frameworks.init_session(args)
 def load_scipy(args, input_file_path):
 	if not os.path.exists(input_file_path):
 		raise ValueError('Please generate the input file ' + input_file_path + ' before invoking compare_frameworks.')
-	X, y = load_svmlight_file(input_file_path, n_features=num_features, zero_based=False)
+	load_file_in_parts = True # To avoid https://github.com/scikit-learn/scikit-learn/issues/5269 when reading imdb dataset
+	if load_file_in_parts:
+		from scipy.sparse import vstack
+		from itertools import islice
+		X = None
+		with open(input_file_path) as f:
+			part = list(islice(f, 1000))
+			while len(part) > 0:
+				with open(input_file_path + '_part', 'w') as f1:
+					for line in part:
+						f1.write(line)
+				X_part, y_part = load_svmlight_file(input_file_path + '_part', n_features=num_features, zero_based=False)
+				X, y = X_part, y_part if X is None else vstack([X, X_part]), vstack([y, y_part])
+				part = list(islice(f, 1000))
+	else:
+		X, y = load_svmlight_file(input_file_path, n_features=num_features, zero_based=False)
 	y = y if args.framework == 'bigdl' else y-1 # convert one-based labels to zero-based
 	args.num_samples = X.shape[0]
 	return X, y
