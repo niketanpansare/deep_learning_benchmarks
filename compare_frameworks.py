@@ -33,7 +33,7 @@ parser=argparse.ArgumentParser("Deep Learning (DL) Benchmarks.")
 parser.add_argument('--model', help='The model to use for comparison. Default: lenet', type=str, default='lenet', choices=['lenet', 'sentence_cnn_static', 'vgg16', 'vgg19', 'resnet50'])
 parser.add_argument('--data', help='The dataset to use for training/testing. Default: mnist', type=str, default='mnist', choices=['mnist', 'imdb', 'random'])
 parser.add_argument('--data_format', help='The input format to use for reading the dataset. Default: numpy', type=str, default='numpy', choices=['spark_df', 'numpy', 'scipy', 'binary_blocks'])
-parser.add_argument('--epochs', help='Number of epochs. Default: 10', type=int, default=10)
+parser.add_argument('--epochs', help='Number of epochs. Default: 1', type=int, default=1)
 parser.add_argument('--batch_size', help='Batch size. Default: 64', type=int, default=64)
 parser.add_argument('--num_gpus', help='Number of GPUs. Default: 0', type=int, default=0)
 parser.add_argument('--num_channels', help='Number of channels when --data=random. Default: -1', type=int, default=-1)
@@ -133,7 +133,11 @@ with measure('fit_time'):
 		_frameworks.FRAMEWORK_FIT[args.framework](args, framework_model, framework_X, framework_y)
 with measure('predict_time'):
 	if args.phase == 'test':
-		_frameworks.FRAMEWORK_PREDICT[args.framework](args, framework_model, framework_X)
+		for iter in range(args.epochs):
+			_frameworks.FRAMEWORK_PREDICT[args.framework](args, framework_model, framework_X)
+		if args.framework == 'tensorflow':
+			from keras import backend as K
+			K.clear_session()
 end = time.time()
 with open('time.txt', 'a') as f:
 	f.write(args.framework + ',' + args.model + ',' + args.data + ',' + args.data_format + ',' + str(args.epochs) + ',' + str(args.batch_size) + ',' + str(args.num_gpus) + ',' + args.precision + ',' + args.blas + ',' + args.phase + ',' + args.codegen + ',' + str(end-start) + ',' + times['data_loading'] + ',' + times['model_loading'] + ',' + times['fit_time'] + ',' + times['spark_init_time'] + ',' + times['predict_time'] + '\n')

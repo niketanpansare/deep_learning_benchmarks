@@ -71,7 +71,7 @@ optional arguments:
   --data_format {spark_df,numpy,scipy,binary_blocks}
                         The input format to use for reading the dataset.
                         Default: numpy
-  --epochs EPOCHS       Number of epochs. Default: 10
+  --epochs EPOCHS       Number of epochs. Default: 1
   --batch_size BATCH_SIZE
                         Batch size. Default: 64
   --num_gpus NUM_GPUS   Number of GPUs. Default: 0

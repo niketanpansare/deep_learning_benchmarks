@@ -226,7 +226,6 @@ def tensorflow_predict(args, framework_model, X):
 		framework_model.predict(X)
 	else:
 		raise ValueError('Unsupported data format for tensorflow:' + args.data_format)
-	K.clear_session()
 
 def elephas_predict(args, framework_model, X):
 	if args.data_format != 'spark_df':
