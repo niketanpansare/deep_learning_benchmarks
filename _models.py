@@ -130,4 +130,13 @@ def get_sentence_cnn_static(args):
 	keras_model = Model(inputL, model_output)
 	return keras_model
 
-MODELS={'lenet': get_lenet, 'sentence_cnn_static': get_sentence_cnn_static}
+def get_vgg16(args):
+	return keras.applications.vgg16.VGG16()
+
+def get_vgg19(args):
+	return keras.applications.vgg19.VGG19()
+
+def get_resnet50(args):
+	return keras.applications.resnet50.ResNet50()
+
+MODELS={'lenet': get_lenet, 'sentence_cnn_static': get_sentence_cnn_static, 'vgg16': get_vgg16, 'vgg19': get_vgg19, 'resnet50': get_resnet50}

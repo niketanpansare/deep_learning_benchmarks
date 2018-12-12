@@ -31,9 +31,17 @@ from sklearn.datasets import dump_svmlight_file
 from sklearn.utils import shuffle
 
 parser=argparse.ArgumentParser()
-parser.add_argument('--data', help='Supported values are: mnist, imdb. Default: mnist', type=str, default='mnist')
+parser.add_argument('--data', help='Supported values are: mnist, imdb, random. Default: mnist', type=str, default='mnist')
 parser.add_argument('--num_samples', help='Number of samples to use. Default:-1 (implies use all the samples in the dataset', type=int, default=-1)
+parser.add_argument('--num_features', help='Generate random data of the given number of features. Default: -1', type=int, default=-1)
+parser.add_argument('--num_labels', help='Generate random data of the given number of labels. Default: -1', type=int, default=-1)
 args=parser.parse_args()
+
+if args.data == 'random':
+	if args.num_samples <= 0 or args.num_features <= 0 or args.num_labels <= 0:
+		raise ValueError('Number of samples (' + str(args.num_samples) + '), features (' + str(args.num_features) + ') and labels (' + str(args.num_labels) + ') should be greater than zero for --data=' + args.data)
+elif args.num_features > 0 or args.num_labels > 0:
+	print('Number of features (' + str(args.num_features) + ') and labels (' + str(args.num_labels) + ') are ignored for --data=' + args.data)
 
 if args.data == 'imdb':
 	sentence_length, embedding_dim = 2494, 300 # Maximum sentence length in imdb is 2494
@@ -84,6 +92,11 @@ elif args.data == 'mnist':
 	X_train = X_train*scale
 	num_samples = args.num_samples if args.num_samples != -1 else len(y)
 	dump_svmlight_file(X_train[0:num_samples,:], y_train[0:num_samples]+1, 'mnist.libsvm', zero_based=False)
+elif args.data == 'random':
+	X = np.random.rand(args.num_samples, args.num_features)
+	y = np.random.randint(args.num_labels, size=args.num_samples)
+	num_samples = args.num_samples
+	dump_svmlight_file(X[0:num_samples,:], y[0:num_samples]+1, 'random.libsvm', zero_based=False)
 else:
 	raise ValueError('Unsupported data:' + args.data)
 print("Done generating data.")

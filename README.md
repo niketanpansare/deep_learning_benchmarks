@@ -18,11 +18,23 @@ Please use `generate_data.py` script to generate the dataset before running the 
 ```
 > $SPARK_HOME/bin/spark-submit generate_data.py -h
 
-usage: generate_data.py [-h] [--data DATA]
+usage: generate_data.py [-h] [--data DATA] [--num_samples NUM_SAMPLES]
+                        [--num_features NUM_FEATURES]
+                        [--num_labels NUM_LABELS]
 
 optional arguments:
-  -h, --help   show this help message and exit
-  --data DATA  Supported values are: mnist, imdb. Default: mnist
+  -h, --help            show this help message and exit
+  --data DATA           Supported values are: mnist, imdb, random. Default:
+                        mnist
+  --num_samples NUM_SAMPLES
+                        Number of samples to use. Default:-1 (implies use all
+                        the samples in the dataset
+  --num_features NUM_FEATURES
+                        Generate random data of the given number of features.
+                        Default: -1
+  --num_labels NUM_LABELS
+                        Generate random data of the given number of labels.
+                        Default: -1
 ```
 
 ### Executing the benchmark
@@ -34,23 +46,27 @@ You can either use `run.sh` script provided in the repository or invoke `compare
 > $SPARK_HOME/bin/spark-submit compare_framework.py -h
 
 usage: Deep Learning (DL) Benchmarks. [-h]
-                                      [--model {lenet,sentence_cnn_static}]
-                                      [--data {mnist,imdb}]
+                                      [--model {lenet,sentence_cnn_static,vgg16,vgg19,resnet50}]
+                                      [--data {mnist,imdb,random}]
                                       [--data_format {spark_df,numpy,scipy,binary_blocks}]
                                       [--epochs EPOCHS]
                                       [--batch_size BATCH_SIZE]
                                       [--num_gpus NUM_GPUS]
+                                      [--num_channels NUM_CHANNELS]
+                                      [--height HEIGHT] [--width WIDTH]
                                       [--framework {systemml,tensorflow,bigdl}]
                                       [--precision {single,double}]
                                       [--blas {openblas,mkl,none,eigen}]
                                       [--phase {train,test}]
                                       [--codegen {enabled,disabled}]
+                                      [--num_labels NUM_LABELS]
 
 optional arguments:
   -h, --help            show this help message and exit
-  --model {lenet,sentence_cnn_static}
+  --model {lenet,sentence_cnn_static,vgg16,vgg19,resnet50}
                         The model to use for comparison. Default: lenet
-  --data {mnist,imdb}   The dataset to use for training/testing. Default:
+  --data {mnist,imdb,random}
+                        The dataset to use for training/testing. Default:
                         mnist
   --data_format {spark_df,numpy,scipy,binary_blocks}
                         The input format to use for reading the dataset.
@@ -59,6 +75,10 @@ optional arguments:
   --batch_size BATCH_SIZE
                         Batch size. Default: 64
   --num_gpus NUM_GPUS   Number of GPUs. Default: 0
+  --num_channels NUM_CHANNELS
+                        Number of channels when --data=random. Default: -1
+  --height HEIGHT       Image height when --data=random. Default: -1
+  --width WIDTH         Image width when --data=random. Default: -1
   --framework {systemml,tensorflow,bigdl}
                         The framework to use for running the benchmark.
                         Default: systemml
@@ -70,6 +90,8 @@ optional arguments:
   --codegen {enabled,disabled}
                         Whether to apply codegen optimization. Supported
                         values are: enabled, disabled. Default: disabled
+  --num_labels NUM_LABELS
+                        Number of labels if --data==random. Default: -1
 ```
 
 

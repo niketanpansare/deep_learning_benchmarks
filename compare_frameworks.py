@@ -30,17 +30,21 @@ data_loading = 0.0
 
 # The framework elephas (as of Feb 5th, 2018) fails with TypeError: 'LabeledPoint' object is not iterable
 parser=argparse.ArgumentParser("Deep Learning (DL) Benchmarks.")
-parser.add_argument('--model', help='The model to use for comparison. Default: lenet', type=str, default='lenet', choices=['lenet', 'sentence_cnn_static'])
-parser.add_argument('--data', help='The dataset to use for training/testing. Default: mnist', type=str, default='mnist', choices=['mnist', 'imdb'])
+parser.add_argument('--model', help='The model to use for comparison. Default: lenet', type=str, default='lenet', choices=['lenet', 'sentence_cnn_static', 'vgg16', 'vgg19', 'resnet50'])
+parser.add_argument('--data', help='The dataset to use for training/testing. Default: mnist', type=str, default='mnist', choices=['mnist', 'imdb', 'random'])
 parser.add_argument('--data_format', help='The input format to use for reading the dataset. Default: numpy', type=str, default='numpy', choices=['spark_df', 'numpy', 'scipy', 'binary_blocks'])
 parser.add_argument('--epochs', help='Number of epochs. Default: 10', type=int, default=10)
 parser.add_argument('--batch_size', help='Batch size. Default: 64', type=int, default=64)
 parser.add_argument('--num_gpus', help='Number of GPUs. Default: 0', type=int, default=0)
+parser.add_argument('--num_channels', help='Number of channels when --data=random. Default: -1', type=int, default=-1)
+parser.add_argument('--height', help='Image height when --data=random. Default: -1', type=int, default=-1)
+parser.add_argument('--width', help='Image width when --data=random. Default: -1', type=int, default=-1)
 parser.add_argument('--framework', help='The framework to use for running the benchmark. Default: systemml', type=str, default='systemml', choices=['systemml', 'tensorflow', 'bigdl'])
 parser.add_argument('--precision', help='Floating point precision. Default: single', type=str, default='single', choices=['single', 'double'])
 parser.add_argument('--blas', help='Native BLAS. Default: openblas', type=str, default='openblas', choices=['openblas', 'mkl', 'none', 'eigen'])
 parser.add_argument('--phase', help='Training/testing phase. Default: train', type=str, default='train', choices=['train', 'test'])
 parser.add_argument('--codegen', help='Whether to apply codegen optimization. Supported values are: enabled, disabled. Default: disabled', type=str, default='disabled', choices=['enabled', 'disabled'])
+parser.add_argument('--num_labels', help='Number of labels if --data==random. Default: -1', type=int, default=-1)
 args=parser.parse_args()
 
 from contextlib import contextmanager
@@ -56,7 +60,12 @@ with measure('spark_init_time'):
 	args.sc, args.spark = _frameworks.initialize_spark(args)
 
 import _models
-input_shapes = _models.input_shapes[args.data]
+if args.data == 'random':
+	input_shapes = (args.num_channels, args.height, args.width)
+	if args.num_labels <= 0:
+		raise ValueError('The number of labels should be positive:' + str(args.num_labels))
+else:
+	input_shapes = _models.input_shapes[args.data]
 args.input_shapes = input_shapes
 num_features = input_shapes[0]*input_shapes[1]*input_shapes[2]
 import keras
@@ -71,6 +80,7 @@ def load_scipy(args, input_file_path):
 		from scipy.sparse import vstack
 		from itertools import islice
 		X = None
+		y = None
 		with open(input_file_path) as f:
 			part = list(islice(f, 1000))
 			while len(part) > 0:
@@ -78,7 +88,10 @@ def load_scipy(args, input_file_path):
 					for line in part:
 						f1.write(line)
 				X_part, y_part = load_svmlight_file(input_file_path + '_part', n_features=num_features, zero_based=False)
-				X, y = X_part, y_part if X is None else vstack([X, X_part]), vstack([y, y_part])
+				if X is None:
+					X, y = X_part, y_part
+				else:
+					X, y = vstack([X, X_part]), vstack([y, y_part])
 				part = list(islice(f, 1000))
 	else:
 		X, y = load_svmlight_file(input_file_path, n_features=num_features, zero_based=False)

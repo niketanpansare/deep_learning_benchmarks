@@ -32,9 +32,6 @@ from keras.backend.tensorflow_backend import set_session
 from keras import regularizers
 from keras.preprocessing import sequence
 import tensorflow as tf
-from bigdl.util.common import Sample, init_engine
-from bigdl.optim.optimizer import Adam, MaxEpoch,Optimizer
-from bigdl.nn.criterion import ClassNLLCriterion
 
 def disable_gpu():
 	os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
@@ -137,10 +134,11 @@ FRAMEWORK_MODELS = {'tensorflow':get_tensorflow_model, 'systemml':get_systemml_m
 
 def get_tensorflow_data(args, X, y):
 	input_shape = _models.get_keras_input_shape(args.input_shapes)
+	num_labels = args.num_labels if args.data == 'random' else _models.num_labels[args.data]
 	if args.data_format == 'scipy':
 		return X, y
 	elif args.data_format == 'numpy':
-		return X.reshape((-1, input_shape[0], input_shape[1], input_shape[2])), np_utils.to_categorical(y, _models.num_labels[args.data])
+		return X.reshape((-1, input_shape[0], input_shape[1], input_shape[2])), np_utils.to_categorical(y, num_labels)
 	else:
 		raise ValueError('Unsupported data format for tensorflow:' + args.data_format)
 
@@ -149,16 +147,20 @@ def get_systemml_data(args, X, y):
 
 def get_elephas_data(args, X, y):
 	input_shape = _models.get_keras_input_shape(args.input_shapes)
+	num_labels = args.num_labels if args.data == 'random' else _models.num_labels[args.data]
 	if args.data_format == 'numpy':
 		# Rather than throwing an error that numpy and scipy is not supported:
 		#from elephas.utils.rdd_utils import to_labeled_point
 		#return to_labeled_point(sc, X, y, categorical=True), None
 		from elephas.utils.rdd_utils import to_simple_rdd
-		return to_simple_rdd(args.sc, X.reshape((-1, input_shape[0], input_shape[1], input_shape[2])), np_utils.to_categorical(y, _models.num_labels[args.data])), None
+		return to_simple_rdd(args.sc, X.reshape((-1, input_shape[0], input_shape[1], input_shape[2])), np_utils.to_categorical(y, num_labels)), None
 	else:
 		raise ValueError('TODO: will support alternative format for elephas once we get it to run with numpy')
 
 def get_bigdl_data(args, X, y):
+	from bigdl.util.common import Sample, init_engine
+	from bigdl.optim.optimizer import Adam, MaxEpoch,Optimizer
+	from bigdl.nn.criterion import ClassNLLCriterion
 	# BigDL requires the target to start from 1
 	if args.data_format == 'numpy' or args.data_format == 'scipy':
 		# Rather than throwing an error that numpy and scipy is not supported. Note: DF example is not working, so instead using RDD example
@@ -213,7 +215,7 @@ FRAMEWORK_FIT = {'systemml': systemml_fit, 'tensorflow': tensorflow_fit, 'elepha
 
 
 def systemml_predict(args, framework_model, X):
-	preds = framework_model.predict(framework_X)
+	preds = framework_model.predict(X)
 	if hasattr(preds, '_jdf'):
 		preds.count()
 
