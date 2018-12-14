@@ -43,14 +43,14 @@ You can either use `run.sh` script provided in the repository or invoke `compare
 
 
 ```
-> $SPARK_HOME/bin/spark-submit compare_framework.py -h
+> $SPARK_HOME/bin/spark-submit compare_frameworks.py -h
 
 usage: Deep Learning (DL) Benchmarks. [-h]
                                       [--model {lenet,sentence_cnn_static,vgg16,vgg19,resnet50}]
                                       [--data {mnist,imdb,random}]
                                       [--data_format {spark_df,numpy,scipy,binary_blocks}]
                                       [--epochs EPOCHS]
-                                      [--batch_size BATCH_SIZE]
+                                      [--batch_size BATCH_SIZE] [--profile]
                                       [--num_gpus NUM_GPUS]
                                       [--num_channels NUM_CHANNELS]
                                       [--height HEIGHT] [--width WIDTH]
@@ -74,6 +74,7 @@ optional arguments:
   --epochs EPOCHS       Number of epochs. Default: 1
   --batch_size BATCH_SIZE
                         Batch size. Default: 64
+  --profile             Should profile. Default: False
   --num_gpus NUM_GPUS   Number of GPUs. Default: 0
   --num_channels NUM_CHANNELS
                         Number of channels when --data=random. Default: -1
@@ -93,5 +94,3 @@ optional arguments:
   --num_labels NUM_LABELS
                         Number of labels if --data==random. Default: -1
 ```
-
-

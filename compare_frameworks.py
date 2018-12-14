@@ -35,6 +35,7 @@ parser.add_argument('--data', help='The dataset to use for training/testing. Def
 parser.add_argument('--data_format', help='The input format to use for reading the dataset. Default: numpy', type=str, default='numpy', choices=['spark_df', 'numpy', 'scipy', 'binary_blocks'])
 parser.add_argument('--epochs', help='Number of epochs. Default: 1', type=int, default=1)
 parser.add_argument('--batch_size', help='Batch size. Default: 64', type=int, default=64)
+parser.add_argument('--profile', help='Should profile. Default: False', action='store_true')
 parser.add_argument('--num_gpus', help='Number of GPUs. Default: 0', type=int, default=0)
 parser.add_argument('--num_channels', help='Number of channels when --data=random. Default: -1', type=int, default=-1)
 parser.add_argument('--height', help='Image height when --data=random. Default: -1', type=int, default=-1)
@@ -126,18 +127,42 @@ with measure('data_loading'):
 	        from pyspark import StorageLevel
         	framework_X.persist(StorageLevel.MEMORY_AND_DISK)
 	        args.num_samples = framework_X.count()
+if args.profile:
+	import cProfile
+	profile_sort_by_attr = 'cumtime' # Alternatives are: 'cumtime', 'ncalls', 'time'
 with measure('model_loading'):
+	if args.profile:
+		pr = cProfile.Profile()
+		pr.enable()
 	framework_model = _frameworks.FRAMEWORK_MODELS[args.framework](args, _models.MODELS[args.model](args))
+	if args.profile:
+		pr.disable()
+		print('The profile for model loading:')
+		pr.print_stats(sort=profile_sort_by_attr)
 with measure('fit_time'):
 	if args.phase == 'train':
+		if args.profile:
+			pr = cProfile.Profile()
+			pr.enable()
 		_frameworks.FRAMEWORK_FIT[args.framework](args, framework_model, framework_X, framework_y)
+		if args.profile:
+			pr.disable()
+			print('The profile for training:')
+			pr.print_stats(sort=profile_sort_by_attr)
 with measure('predict_time'):
 	if args.phase == 'test':
+		if args.profile:
+			pr = cProfile.Profile()
+			pr.enable()
 		for iter in range(args.epochs):
 			_frameworks.FRAMEWORK_PREDICT[args.framework](args, framework_model, framework_X)
 		if args.framework == 'tensorflow':
 			from keras import backend as K
 			K.clear_session()
+		if args.profile:
+			pr.disable()
+			print('The profile for testing:')
+			pr.print_stats(sort=profile_sort_by_attr)
 end = time.time()
 with open('time.txt', 'a') as f:
 	f.write(args.framework + ',' + args.model + ',' + args.data + ',' + args.data_format + ',' + str(args.epochs) + ',' + str(args.batch_size) + ',' + str(args.num_gpus) + ',' + args.precision + ',' + args.blas + ',' + args.phase + ',' + args.codegen + ',' + str(end-start) + ',' + times['data_loading'] + ',' + times['model_loading'] + ',' + times['fit_time'] + ',' + times['spark_init_time'] + ',' + times['predict_time'] + '\n')

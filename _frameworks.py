@@ -56,7 +56,11 @@ def initialize_spark(args):
 		spark = None
 		from pyspark import SparkContext
 		from pyspark.mllib.util import MLUtils
-		sc = SparkContext()
+		from pyspark import SparkConf
+		sconf = SparkConf()
+		if args.profile:
+			sconf.set("spark.python.profile","true")
+		sc = SparkContext(conf=sconf)
 		sc.parallelize([1, 2, 3, 4, 5]).count()
 		if args.framework != 'elephas':
 			# As elephas only support Spark 1.6 or less as of Feb 5th 2018
@@ -99,7 +103,9 @@ def get_systemml_model(args, keras_model):
 		raise ValueError("Incorrect number of samples")
 	else:
 		max_iter = int(args.epochs*math.ceil(args.num_samples/args.batch_size))
+		max_iter = max_iter if max_iter > 0 else 1
         sysml_model = Keras2DML(args.spark, compile_keras_model(args, keras_model), input_shape=args.input_shapes, batch_size=args.batch_size, max_iter=max_iter, test_iter=0, display=100, load_keras_weights=load_keras_weights)
+	sysml_model.set(test_algo = 'batch')
 	sysml_model.setStatistics(True).setStatisticsMaxHeavyHitters(100)
 	sysml_model.setConfigProperty("sysml.gpu.sync.postProcess", "false")
 	# sysml_model.setConfigProperty("sysml.stats.finegrained", "true")  # for detailed statistics
