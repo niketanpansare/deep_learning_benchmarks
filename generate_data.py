@@ -26,7 +26,6 @@ import os, argparse, sys, random
 import numpy as np
 from keras.preprocessing import sequence
 from keras.datasets import imdb
-from gensim.models import word2vec
 from sklearn.datasets import dump_svmlight_file
 from sklearn.utils import shuffle
 
